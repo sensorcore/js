@@ -1,0 +1,49 @@
+{
+    "name": "sensorcore",
+    "version": "1.0.0",
+    "description": "SensorCore SDK for JavaScript & TypeScript — logging, analytics, and remote config for browser and Node.js",
+    "author": "SensorCore",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "types": "./dist/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/esm/index.d.ts",
+                "default": "./dist/esm/index.js"
+            },
+            "require": {
+                "types": "./dist/cjs/index.d.ts",
+                "default": "./dist/cjs/index.js"
+            }
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "keywords": [
+        "logging",
+        "analytics",
+        "remote-config",
+        "sensorcore",
+        "observability"
+    ],
+    "scripts": {
+        "build:esm": "tsc -p tsconfig.json",
+        "build:cjs": "tsc -p tsconfig.cjs.json",
+        "build": "rm -rf dist && npm run build:esm && npm run build:cjs",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "prepublishOnly": "npm run build"
+    },
+    "devDependencies": {
+        "@types/node": "^25.3.2",
+        "typescript": "^5.7.0",
+        "vitest": "^3.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
