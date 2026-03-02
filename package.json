@@ -1,6 +1,6 @@
 {
     "name": "sensorcore",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "SensorCore SDK for JavaScript & TypeScript — logging, analytics, and remote config for browser and Node.js",
     "author": "SensorCore",
     "license": "MIT",
