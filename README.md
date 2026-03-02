@@ -1,6 +1,12 @@
 # SensorCore JavaScript SDK
 
-TypeScript SDK for sending logs to your [SensorCore](https://github.com/udevwork/SensorCore) server. Zero external dependencies, works in browser and Node.js 18+.
+Official TypeScript SDK for [SensorCore](https://sensorcore.dev) — a real-time analytics and logging platform for mobile and web apps. Collect logs, analyze user behavior with ML, run A/B tests, and manage Remote Config from one dashboard.
+
+👉 **[sensorcore.dev](https://sensorcore.dev)** — create a free account to get your API key.
+
+---
+
+Zero external dependencies. Works in browser and Node.js 18+.
 
 ## Installation
 
@@ -16,7 +22,6 @@ import SensorCore from 'sensorcore';
 // 1. Configure once at app startup
 SensorCore.configure({
   apiKey: 'sc_your_api_key',
-  host: 'https://api.sensorcore.dev',
 });
 
 // 2a. Fire-and-forget — no await needed, never throws (most common)
@@ -37,7 +42,7 @@ try {
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `apiKey` | `string` | — | Your project API key |
-| `host` | `string` | — | Your SensorCore server URL |
+| `host` | `string` | `api.sensorcore.dev` | SensorCore server URL (rarely needed) |
 | `defaultUserId` | `string?` | `undefined` | Auto-attached user ID for every log |
 | `enabled` | `boolean` | `true` | Set `false` to silence all logs (e.g. in tests) |
 | `timeout` | `number` | `10000` | Network request timeout in **milliseconds** |
@@ -50,7 +55,6 @@ try {
 ```ts
 SensorCore.configure({
   apiKey: 'sc_abc123',
-  host: 'https://api.sensorcore.dev',
   defaultUserId: currentUser?.id,
   enabled: process.env.NODE_ENV !== 'test',
   timeout: 15_000,

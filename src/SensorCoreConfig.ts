@@ -1,10 +1,15 @@
 /**
+ * Default SensorCore API host.
+ */
+const SENSORCORE_DEFAULT_HOST = 'https://api.sensorcore.dev';
+
+/**
  * Configuration options for the SensorCore SDK.
  *
- * All properties except `apiKey` and `host` have sensible defaults,
- * so the minimal setup is just:
+ * Only `apiKey` is required — the host defaults to `https://api.sensorcore.dev`.
+ * Minimal setup:
  * ```ts
- * SensorCore.configure({ apiKey: 'sc_xxx', host: 'https://api.sensorcore.dev' });
+ * SensorCore.configure({ apiKey: 'sc_xxx' });
  * ```
  */
 export interface SensorCoreConfig {
@@ -16,10 +21,10 @@ export interface SensorCoreConfig {
 
     /**
      * Base URL of the SensorCore server.
-     * Must include the scheme, e.g. `https://api.sensorcore.dev`.
+     * Defaults to `https://api.sensorcore.dev`.
      * Do **not** include a trailing slash — the SDK appends `/api/logs` automatically.
      */
-    host: string;
+    host?: string;
 
     /**
      * A stable identifier for the currently signed-in user.
@@ -79,7 +84,7 @@ export interface ResolvedSensorCoreConfig {
 export function resolveConfig(config: SensorCoreConfig): ResolvedSensorCoreConfig {
     return {
         apiKey: config.apiKey,
-        host: config.host.replace(/\/+$/, ''), // strip trailing slashes
+        host: (config.host ?? SENSORCORE_DEFAULT_HOST).replace(/\/+$/, ''), // strip trailing slashes
         defaultUserId: config.defaultUserId,
         enabled: config.enabled ?? true,
         timeout: config.timeout ?? 10_000,

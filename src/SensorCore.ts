@@ -36,7 +36,6 @@ export interface LogOptions {
  *
  * SensorCore.configure({
  *   apiKey: 'sc_your_api_key',
- *   host: 'https://api.sensorcore.dev',
  * });
  * ```
  *
