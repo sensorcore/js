@@ -6,7 +6,7 @@ Official TypeScript SDK for [SensorCore](https://sensorcore.dev) — a real-time
 
 ---
 
-Zero external dependencies. Works in browser and Node.js 18+.
+Zero external dependencies. Works in browser, Node.js 18+, and React Native.
 
 ## Installation
 
@@ -194,6 +194,7 @@ const retries = config.int('max_retries') ?? 3;
 
 - **Browser:** Any modern browser with `fetch` support
 - **Node.js:** 18+ (native `fetch`)
+- **React Native:** 0.63+ (works with RN's `AbortController` polyfill)
 - **TypeScript:** 5.0+ (optional — works with plain JavaScript too)
 
 ## License
