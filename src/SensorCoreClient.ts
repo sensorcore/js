@@ -166,7 +166,7 @@ export class SensorCoreClient {
             const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'x-api-key': this.config.apiKey },
-                signal: AbortSignal.timeout(this.config.timeout),
+                signal: this.createTimeoutSignal(this.config.timeout),
             });
 
             if (!response.ok) return SensorCoreRemoteConfig.empty;
@@ -309,6 +309,28 @@ export class SensorCoreClient {
         return false;
     }
 
+    /**
+     * Create a timeout signal, with fallback for environments where
+     * `AbortSignal.timeout` is not available (e.g. React Native).
+     */
+    private createTimeoutSignal(ms: number): AbortSignal {
+        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+            return AbortSignal.timeout(ms);
+        }
+
+        // Fallback: manual AbortController + setTimeout
+        const controller = new AbortController();
+        const id = setTimeout(
+            () => controller.abort(
+                new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+            ),
+            ms,
+        );
+        // Clear the timer if the signal is aborted for another reason
+        controller.signal.addEventListener('abort', () => clearTimeout(id), { once: true });
+        return controller.signal;
+    }
+
     /** Execute the actual fetch POST request. */
     private doFetch(entry: SensorCoreEntry): Promise<Response> {
         const url = `${this.config.host}/api/logs`;
@@ -321,7 +343,7 @@ export class SensorCoreClient {
                 'x-api-key': this.config.apiKey,
             },
             body,
-            signal: AbortSignal.timeout(this.config.timeout),
+            signal: this.createTimeoutSignal(this.config.timeout),
         });
     }
 
