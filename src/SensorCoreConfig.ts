@@ -30,6 +30,13 @@ export interface SensorCoreConfig {
      * A stable identifier for the currently signed-in user.
      * When set, this value is attached to every log entry automatically.
      * You can still override it per-call via `log('...', { userId: '...' })`.
+     *
+     * If omitted, the SDK auto-generates a persistent device-level UUID
+     * stored in `localStorage` (browser) or `~/.sensorcore/device_id` (Node.js).
+     * Call `SensorCore.resetDeviceId()` on user logout to generate a new one.
+     *
+     * **Priority:** per-call `userId` > `defaultUserId` > auto device ID
+     *
      * @default undefined
      */
     defaultUserId?: string;

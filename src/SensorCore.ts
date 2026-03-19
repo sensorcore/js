@@ -6,6 +6,7 @@ import { createEntry } from './SensorCoreEntry.js';
 import { SensorCoreError } from './SensorCoreError.js';
 import type { SensorCoreLevel } from './SensorCoreLevel.js';
 import { SensorCoreRemoteConfig } from './SensorCoreRemoteConfig.js';
+import { getDeviceId, resetDeviceId } from './SensorCoreDeviceId.js';
 
 // ---------------------------------------------------------------------------
 // Log options
@@ -90,7 +91,7 @@ class SensorCore {
                 console.log(
                     `[SensorCore] ✅ configured\n` +
                     `  Host:    ${resolved.host}\n` +
-                    `  User:    ${resolved.defaultUserId ?? '(none)'}\n` +
+                    `  User:    ${resolved.defaultUserId ?? 'auto:' + getDeviceId()}\n` +
                     `  Timeout: ${resolved.timeout}ms`,
                 );
             } else {
@@ -152,9 +153,29 @@ class SensorCore {
         if (!client || !config) return null;
 
         const level = options?.level ?? 'info';
-        const userId = options?.userId ?? config.defaultUserId;
+        const userId = options?.userId ?? config.defaultUserId ?? getDeviceId();
         const entry = createEntry(content, level, userId, options?.metadata);
         return { entry, client };
+    }
+
+    // -- Device ID --------------------------------------------------------------
+
+    /**
+     * The auto-generated device ID used as fallback when no explicit
+     * `userId` or `defaultUserId` is provided.
+     *
+     * Persisted in `localStorage` (browser) or `~/.sensorcore/device_id` (Node.js).
+     */
+    static get deviceId(): string {
+        return getDeviceId();
+    }
+
+    /**
+     * Reset the auto-generated device ID. A new one will be generated
+     * on the next log call. Call this on user logout.
+     */
+    static resetDeviceId(): void {
+        resetDeviceId();
     }
 }
 

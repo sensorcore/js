@@ -43,7 +43,7 @@ try {
 |-----------|------|---------|-------------|
 | `apiKey` | `string` | — | Your project API key |
 | `host` | `string` | `api.sensorcore.dev` | SensorCore server URL (rarely needed) |
-| `defaultUserId` | `string?` | `undefined` | Auto-attached user ID for every log |
+| `defaultUserId` | `string?` | auto device ID | Explicit user ID for every log. If omitted, SDK auto-generates a persistent UUID |
 | `enabled` | `boolean` | `true` | Set `false` to silence all logs (e.g. in tests) |
 | `timeout` | `number` | `10000` | Network request timeout in **milliseconds** |
 | `persistFailedLogs` | `boolean` | `true` | Save failed logs for auto-retry |
@@ -106,6 +106,7 @@ try {
       case 'server_error':    break; // server returned 4xx / 5xx
       case 'encoding_failed': break; // metadata serialisation failed
       case 'rate_limited':    break; // server returned 429
+      case 'quota_exceeded':  break; // free-tier limit reached — upgrade to Pro
     }
   }
 }
@@ -114,6 +115,10 @@ try {
 ### Rate Limiting
 
 If the server returns **HTTP 429**, the SDK activates a circuit breaker with exponential backoff (60s → 120s → 300s → 600s max). After the cooldown expires, logging is automatically resumed. A successful request resets the backoff timer.
+
+### Quota Exceeded
+
+If the server returns **HTTP 403** with `QUOTA_EXCEEDED`, the free-tier log limit has been reached. The SDK activates the circuit breaker (same as rate limiting). Upgrade to Pro at [sensorcore.dev](https://sensorcore.dev) for unlimited logging.
 
 ## Offline Buffering
 
@@ -133,6 +138,30 @@ Each entry keeps its **original timestamp** from when `log()` was called.
 - **24-hour TTL** — stale entries are pruned automatically
 - Configurable via `persistFailedLogs`, `maxPendingLogs`, `pendingLogMaxAge`
 - Set `persistFailedLogs: false` to disable entirely
+
+## Automatic User Tracking
+
+When no `defaultUserId` or per-call `userId` is provided, the SDK auto-generates a persistent **device-level UUID**:
+
+- **Browser**: stored in `localStorage` (key: `sensorcore_device_id`)
+- **Node.js**: stored in `~/.sensorcore/device_id`
+
+This ensures every log has a `user_id`, enabling all user-centric analytics.
+
+**Priority chain:**
+```
+per-call userId  >  config.defaultUserId  >  auto device ID
+```
+
+**Access the device ID:**
+```ts
+const id = SensorCore.deviceId; // read the auto-generated ID
+```
+
+**Reset on logout** (generates a new ID on next access):
+```ts
+SensorCore.resetDeviceId();
+```
 
 ## Remote Config
 

@@ -13,6 +13,7 @@
  *       case 'server_error':   break;
  *       case 'encoding_failed': break;
  *       case 'rate_limited':   break;
+ *       case 'quota_exceeded': break;
  *     }
  *   }
  * }
@@ -23,7 +24,8 @@ export type SensorCoreErrorCode =
     | 'encoding_failed'
     | 'server_error'
     | 'network_error'
-    | 'rate_limited';
+    | 'rate_limited'
+    | 'quota_exceeded';
 
 /**
  * Typed error thrown by {@link SensorCore.logAsync} and used internally.
@@ -90,6 +92,14 @@ export class SensorCoreError extends Error {
         return new SensorCoreError(
             'rate_limited',
             'SensorCore rate-limited (HTTP 429). Logging paused temporarily.',
+        );
+    }
+
+    static quotaExceeded(): SensorCoreError {
+        return new SensorCoreError(
+            'quota_exceeded',
+            'SensorCore free-tier quota exceeded (HTTP 403). Upgrade to Pro at https://sensorcore.dev',
+            { statusCode: 403 },
         );
     }
 }

@@ -142,6 +142,11 @@ export class SensorCoreClient {
             throw SensorCoreError.rateLimited();
         }
 
+        if (response.status === 403 && await SensorCoreClient.isQuotaExceeded(response)) {
+            this.activateCooldown('free-tier quota exceeded (HTTP 403). Upgrade at https://sensorcore.dev');
+            throw SensorCoreError.quotaExceeded();
+        }
+
         if (!response.ok) {
             throw SensorCoreError.serverError(response.status);
         }
@@ -205,7 +210,7 @@ export class SensorCoreClient {
     }
 
     /** Activate the circuit breaker with exponential backoff. */
-    private activateCooldown(): void {
+    private activateCooldown(reason?: string): void {
         const cooldownSec = COOLDOWN_STEPS[Math.min(this._cooldownIndex, COOLDOWN_STEPS.length - 1)];
         this._isSilenced = true;
         this._silencedUntil = Date.now() + cooldownSec * 1_000;
@@ -213,8 +218,21 @@ export class SensorCoreClient {
 
         if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
             console.warn(
-                `[SensorCore] ⚠️ HTTP 429 — rate limited. Logging paused for ${cooldownSec}s.`,
+                `[SensorCore] ⚠️ ${reason ?? 'HTTP 429 — rate limited'}. Logging paused for ${cooldownSec}s.`,
             );
+        }
+    }
+
+    /**
+     * Check if a 403 response body contains the server's `QUOTA_EXCEEDED` code.
+     * Uses `response.clone()` because the body can only be read once.
+     */
+    private static async isQuotaExceeded(response: Response): Promise<boolean> {
+        try {
+            const body = await response.clone().json();
+            return body?.code === 'QUOTA_EXCEEDED';
+        } catch {
+            return false;
         }
     }
 
@@ -275,10 +293,15 @@ export class SensorCoreClient {
                 return true;
             }
 
+            if (response.status === 403 && await SensorCoreClient.isQuotaExceeded(response)) {
+                this.activateCooldown('free-tier quota exceeded (HTTP 403). Upgrade at https://sensorcore.dev');
+                return true;
+            }
+
             if (response.ok) {
                 this.resetCooldown();
             }
-            // Non-2xx, non-429 → log dropped (matches iOS behaviour)
+            // Non-2xx, non-429, non-403-quota → log dropped (matches iOS behaviour)
         } catch {
             // Network error → persist for retry
             this.persistence?.save([entry]);
@@ -333,6 +356,14 @@ export class SensorCoreClient {
                     if (response.status === 429) {
                         this.activateCooldown();
                         // Preserve current + remaining
+                        for (let j = i; j < pending.length; j++) {
+                            stillFailed.push(pending[j]);
+                        }
+                        break;
+                    }
+
+                    if (response.status === 403 && await SensorCoreClient.isQuotaExceeded(response)) {
+                        this.activateCooldown('free-tier quota exceeded (HTTP 403). Upgrade at https://sensorcore.dev');
                         for (let j = i; j < pending.length; j++) {
                             stillFailed.push(pending[j]);
                         }
